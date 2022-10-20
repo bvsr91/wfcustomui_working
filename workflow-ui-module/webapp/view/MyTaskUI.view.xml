@@ -1,0 +1,99 @@
+<mvc:View controllerName="com.act.workflowuimodule.controller.MyTaskUI" xmlns:layout="sap.ui.layout" xmlns:mvc="sap.ui.core.mvc" displayBlock="true" xmlns:m="sap.m" xmlns:form="sap.ui.layout.form" xmlns="sap.uxap">
+    <m:App>
+        <m:pages>
+            <m:Page>
+                <m:content>
+                    <ObjectPageLayout id="ObjectPageLayout" showAnchorBarPopover="false" upperCaseAnchorBar="false" showTitleInHeaderContent="false" showHeaderContent="false">
+                        <sections>
+                            <ObjectPageSection id="idOpseMainData" titleUppercase="false" title="Main Data">
+                                <subSections>
+                                    <ObjectPageSubSection id="idOpsSubMain" title="" titleUppercase="false">
+                                        <blocks>
+                                            <form:SimpleForm
+                                                editable="false"
+                                                layout="ResponsiveGridLayout"
+                                                labelSpanXL="3"
+                                                labelSpanL="3"
+                                                labelSpanM="3"
+                                                labelSpanS="12"
+                                                adjustLabelSpan="false"
+                                                emptySpanXL="4"
+                                                emptySpanL="4"
+                                                emptySpanM="4"
+                                                emptySpanS="0"
+                                                columnsXL="1"
+                                                columnsL="1"
+                                                columnsM="1"
+                                                singleContainerFullSize="false"
+                                            >
+                                                <form:content>
+                                                    <m:Label text="Manufacturer Code" />
+                                                    <m:Text id="idIpManf" text="{taskData>/oMainData/manufacturerCode}" />
+                                                    <m:Label text="Manufacturer Description" />
+                                                    <m:Text id="ManfDescId" text="{taskData>/oMainData/manufacturerCodeDesc}" />
+                                                    <m:Label text="Country" />
+                                                    <m:Text id="idIpCountry" text="{taskData>/oMainData/countryCode_code}" />
+                                                    <m:Label text="Local Manufacutrer Code" />
+                                                    <m:Text id="idIpLocalManufCode" text="{taskData>/oMainData/localManufacturerCode}" />
+                                                    <m:Label text="Local Manufacturer Description" />
+                                                    <m:Text id="localManufDescID" text="{taskData>/oMainData/localManufacturerCodeDesc}" />
+                                                    <m:Label text="Approver" />
+                                                    <m:Text text="{taskData>/oMainData/approver}" />
+                                                    <m:Label text="Status" />
+                                                    <m:Text text="{taskData>/oMainData/status_code}" />
+                                                    <m:Label text="Created By" />
+                                                    <m:Text text="{taskData>/oMainData/createdBy}" />
+                                                    <m:Label text="Created At" />
+                                                    <m:Text text="{taskData>/oMainData/createdAt}" />
+                                                </form:content>
+                                            </form:SimpleForm>
+                                        </blocks>
+                                    </ObjectPageSubSection>
+                                </subSections>
+                            </ObjectPageSection>
+                            <ObjectPageSection id="idOpseHist" titleUppercase="false" title="History">
+                                <subSections>
+                                    <ObjectPageSubSection id="idOpseSubHist" title="" titleUppercase="false">
+                                        <blocks>
+                                            <m:Table
+                                                id="idProductsTable"
+                                                inset="false"
+                                                items="{
+                                                path: 'taskData>/aComments',
+                                                sorter: {
+                                                    path: 'createdAt'
+                                                }
+                                            }"
+                                            >
+                                                <m:columns>
+                                                    <m:Column width="12em">
+                                                        <m:Text text="Commented By" />
+                                                    </m:Column>
+                                                    <m:Column width="16em">
+                                                        <m:Text text="Date" />
+                                                    </m:Column>
+                                                    <m:Column>
+                                                        <m:Text text="Comment" />
+                                                    </m:Column>
+                                                </m:columns>
+                                                <m:items>
+                                                    <m:ColumnListItem vAlign="Middle">
+                                                        <m:cells>
+                                                            <m:Text text="{taskData>createdBy}"/>
+                                                            <m:Text text="{taskData>createdAt}" />
+                                                            <m:Text text="{taskData>Comment}" />
+                                                        </m:cells>
+                                                    </m:ColumnListItem>
+                                                </m:items>
+                                            </m:Table>
+                                        </blocks>
+                                    </ObjectPageSubSection>
+                                </subSections>
+                            </ObjectPageSection>
+                        </sections>
+                    </ObjectPageLayout>
+                </m:content>
+            </m:Page>
+        </m:pages>
+    </m:App>
+</mvc:View>
