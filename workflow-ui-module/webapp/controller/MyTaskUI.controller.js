@@ -8,19 +8,20 @@ sap.ui.define([
         "use strict";
 
         return Controller.extend("com.act.workflowuimodule.controller.MyTaskUI", {
-            onInit: function () {
-                // var oModel = this.getOwnerComponent().getModel();
-                //     var oData = {
-                //         "manufacturerCode": '454',
-                //         "countryCode_code": 'AD',
-                //         "uuid": '1f07153d-99d6-4582-8ea2-c5678fb04df1'
-                //     }
-                //     this.getModel("taskData").setProperty("/data", oData);
-                //     var oParms = this.getModel("taskData").getProperty("/data");
-                // aFilter.push(new Filter("Vendor_List_manufacturerCode", FilterOperator.EQ, oSelObj.manufacturerCode, true));
-                // aFilter.push(new Filter("Vendor_List_uuid", FilterOperator.EQ, oSelObj.uuid, true));
-                // aFilter.push(new Filter("Vendor_List_countryCode_code", FilterOperator.EQ, oSelObj.countryCode_code, true));
-                // oList.getBinding("items").filter(aFilter);
+            onInit: function () {               
+            },
+            onLiveChange: function (oEvent) {
+                var sValue = oEvent.getParameter("value");
+                // this.getOwnerComponent().getModel("taskData").setProperty("/oComment/sComment", sValue);
+                if (sValue === "" || sValue === undefined) {
+                    // this.getOwnerComponent().getModel("taskData").setProperty("/oComment/valueState", "Error");
+                    this.getOwnerComponent().getModel("taskData").setProperty("/oComment/sComment", sValue);
+                    // this.getOwnerComponent().getModel("taskData").setProperty("/oComment/valueStateText", "Please enter comment");
+                } else {
+                    this.getOwnerComponent().getModel("taskData").setProperty("/oComment/valueState", "None");
+                    this.getOwnerComponent().getModel("taskData").setProperty("/oComment/sComment", sValue);
+                    this.getOwnerComponent().getModel("taskData").setProperty("/oComment/valueStateText", "");
+                }
             }
         });
     });

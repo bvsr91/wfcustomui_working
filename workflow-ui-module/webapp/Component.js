@@ -4,9 +4,10 @@ sap.ui.define(
         "sap/ui/Device",
         "sap/ui/model/Filter",
         "sap/ui/model/FilterOperator",
+        "sap/m/MessageBox",
         "com/act/workflowuimodule/model/models",
     ],
-    function (UIComponent, Device, Filter, FilterOperator, models) {
+    function (UIComponent, Device, Filter, FilterOperator, MessageBox, models) {
         "use strict";
 
         return UIComponent.extend(
@@ -30,23 +31,32 @@ sap.ui.define(
                     if (queryParameters.data) {
                         this.getModel("taskData").setProperty("/data", JSON.parse(queryParameters.data));
                     }
-
                     // enable routing
                     this.getRouter().initialize();
 
                     // set the device model
                     this.setModel(models.createDeviceModel(), "device");
                     this.prepareTaskModels();
-                    this.getCountryCodes();
+                    // this.setTestData();
+                    this.getPageData();
                 },
-                getCountryCodes: async function () {
+                setTestData: function () {
+                    var oData = {
+                        "manufacturerCode": '9000',
+                        "countryCode_code": 'IT',
+                        "uuid": '8e772605-538f-4fa9-9bee-49265c028771'
+                    }
+                    this.getModel("taskData").setProperty("/data", oData);
+                },
+                getPageData: async function () {
+                    var oTAComment = {
+                        "valueState": "None",
+                        "sComment": "",
+                        "valueStateText": ""
+                    }
+                    this.getModel("taskData").setProperty("/oComment", oTAComment);
+
                     var oModel = this.getModel();
-                    // var oData = {
-                    //     "manufacturerCode": '454',
-                    //     "countryCode_code": 'AD',
-                    //     "uuid": '1f07153d-99d6-4582-8ea2-c5678fb04df1'
-                    // }
-                    // this.getModel("taskData").setProperty("/data", oData);
                     var oParms = this.getModel("taskData").getProperty("/data");
                     var sPath = "/VendorList(manufacturerCode='" + oParms.manufacturerCode + "',countryCode_code='" + oParms.countryCode_code + "',uuid=guid'" + oParms.uuid + "')";
                     var oData = await $.get(oModel.sServiceUrl + sPath);
@@ -57,12 +67,6 @@ sap.ui.define(
                 },
                 getCommentsData: function () {
                     var oModel = this.getModel();
-                    // var oData = {
-                    //     "manufacturerCode": '9000',
-                    //     "countryCode_code": 'IT',
-                    //     "uuid": '8e772605-538f-4fa9-9bee-49265c028771'
-                    // }
-                    // this.getModel("taskData").setProperty("/data", oData);
                     var oParms = this.getModel("taskData").getProperty("/data");
                     var aFilter = [];
                     aFilter.push(new Filter("Vendor_List_manufacturerCode", FilterOperator.EQ, oParms.manufacturerCode, true));
@@ -79,9 +83,7 @@ sap.ui.define(
                     });
                 },
                 prepareTaskModels: function () {
-
                     this.setTaskModels();
-
                     this.getInboxAPI().addAction(
                         {
                             action: "APPROVE",
@@ -149,8 +151,13 @@ sap.ui.define(
 
                 completeTask: function (approvalStatus) {
                     this.getModel("context").setProperty("/approved", approvalStatus);
-                    this._patchTaskInstance();
-                    this._refreshTaskList();
+                    if (approvalStatus) {
+                        this.approveRequest();
+                    } else {
+                        this.rejectRequest();
+                    }
+                    // this._patchTaskInstance();
+                    // this._refreshTaskList();
                 },
 
                 _patchTaskInstance: function () {
@@ -191,6 +198,134 @@ sap.ui.define(
                 _refreshTaskList: function () {
                     this.getInboxAPI().updateTask("NA", this.getTaskInstanceID());
                 },
+                approveRequest: async function () {
+                    var oModel = this.getModel();
+                    sap.ui.core.BusyIndicator.show();
+                    var oParms = this.getModel("taskData").getProperty("/data");
+                    var oActionUriParameters = {
+                        uuid: oParms.uuid,
+                        manufacturerCode: oParms.manufacturerCode,
+                        countryCode: oParms.countryCode_code
+                    };
+                    var sPath = "/approveVendor";
+                    const info = await this.updateRecord(sPath, oActionUriParameters);
+                    if (info.approveVendor) {
+                        this._patchTaskInstance();
+                        this._refreshTaskList();
+                    } else {
+                        this.errorHandling(info);
+                    }
+                    sap.ui.core.BusyIndicator.hide();
+                },
+                rejectRequest: async function () {
+                    var oParms = this.getModel("taskData").getProperty("/data");
+                    var sComment = this.getModel("taskData").getProperty("/oComment/sComment");
+                    if (sComment === "" || sComment === undefined) {
+                        this.getModel("taskData").setProperty("/oComment/valueState", "Error");
+                        this.getModel("taskData").setProperty("/oComment/valueStateText", "Please enter comment");
+                        MessageBox.error("Please enter the comment to reject the request");
+                    } else {
+                        sap.ui.core.BusyIndicator.show();
+                        var oActionUriParameters = {
+                            Vendor_List_manufacturerCode: oParms.manufacturerCode,
+                            Vendor_List_countryCode_code: oParms.countryCode_code,
+                            Vendor_List_uuid: oParms.uuid,
+                            localManufacturerCode: oParms.localManufacturerCode,
+                            Comment: sComment
+                        };
+                        const info = await this.updateRejectRecord("/VendorComments", oActionUriParameters);
+                        if (info.Vendor_List_uuid) {
+                            sap.ui.core.BusyIndicator.hide();
+                            this._patchTaskInstance();
+                            this._refreshTaskList();
+                        } else {
+                            sap.ui.core.BusyIndicator.hide();
+                            this.errorHandling(info);
+                        }
+                    }
+                },
+                updateRecord: function (sPath, oPayLoad) {
+                    var oModel = this.getModel();
+                    return new Promise(function (resolve, reject) {
+                        oModel.callFunction(sPath, {
+                            method: "POST",
+                            urlParameters: oPayLoad,
+                            success: function (oData) {
+                                resolve(oData);
+                            }.bind(this),
+                            error: function (error) {
+                                resolve(error);
+                            }.bind(this)
+                        });
+                    }.bind(this));
+                },
+                updateRejectRecord: function (sPath, oPayLoad) {
+                    var oModel = this.getModel();
+                    return new Promise(function (resolve, reject) {
+                        oModel.create(sPath, oPayLoad, {
+                            success: function (oData) {
+                                resolve(oData);
+                            }.bind(this),
+                            error: function (error) {
+                                resolve(error);
+                            }.bind(this)
+                        });
+                    }.bind(this));
+                },
+                errorHandling: function (responseBody) {
+                    try {
+                        var body = JSON.parse(responseBody.responseText);
+                        var errorDetails = body.error.innererror.errordetails;
+                        if (errorDetails) {
+                            if (errorDetails.length > 0) {
+                                var sMsg = "";
+                                for (var i = 0; i < errorDetails.length; i++) {
+                                    if (sMsg === "") {
+                                        sMsg = errorDetails[i].message;
+                                    } else {
+                                        sMsg = sMsg + ", " + errorDetails[i].message;
+                                    }
+                                }
+                                if (typeof (responseBody) === "object") {
+                                    MessageBox.error(sMsg.value);
+                                } else {
+                                    MessageBox.error(sMsg);
+                                }
+                            } else
+                                MessageBox.error(body.error.message.value);
+                        } else
+                            MessageBox.error(body.error.message.value);
+                        // }
+                    } catch (err) {
+                        try {
+                            //the error is in xml format. Technical error by framework
+                            switch (typeof responseBody) {
+                                case "string": // XML or simple text
+                                    if (responseBody.indexOf("<?xml") > -1) {
+                                        var oXML = jQuery.parseXML(responseBody);
+                                        var oXMLMsg = oXML.querySelector("message");
+                                        if (oXMLMsg)
+                                            MessageBox.error(oXMLMsg.textContent);
+                                    } else
+                                        MessageBox.error(responseBody);
+
+                                    break;
+                                case "object": // Exception
+                                    var oXML = jQuery.parseXML(responseBody.responseText);
+                                    var oXMLMsg = oXML.querySelector("message");
+                                    if (oXMLMsg) {
+                                        MessageBox.error(oXMLMsg.textContent);
+                                    } else {
+                                        MessageBox.error(responseBody);
+                                    }
+                                    break;
+                            }
+                        } catch (err) {
+                            MessageBox.error(JSON.stringify(responseBody));
+                        }
+
+                    }
+                }
             }
         );
     }

@@ -1,7 +1,7 @@
 <mvc:View controllerName="com.act.workflowuimodule.controller.MyTaskUI" xmlns:layout="sap.ui.layout" xmlns:mvc="sap.ui.core.mvc" displayBlock="true" xmlns:m="sap.m" xmlns:form="sap.ui.layout.form" xmlns="sap.uxap">
-    <m:App>
+    <m:App id="idApp">
         <m:pages>
-            <m:Page>
+            <m:Page id="idPage1">
                 <m:content>
                     <ObjectPageLayout id="ObjectPageLayout" showAnchorBarPopover="false" upperCaseAnchorBar="false" showTitleInHeaderContent="false" showHeaderContent="false">
                         <sections>
@@ -10,6 +10,7 @@
                                     <ObjectPageSubSection id="idOpsSubMain" title="" titleUppercase="false">
                                         <blocks>
                                             <form:SimpleForm
+                                                id="idSf"
                                                 editable="false"
                                                 layout="ResponsiveGridLayout"
                                                 labelSpanXL="3"
@@ -79,13 +80,45 @@
                                                 <m:items>
                                                     <m:ColumnListItem vAlign="Middle">
                                                         <m:cells>
-                                                            <m:Text text="{taskData>createdBy}"/>
+                                                            <m:Text text="{taskData>createdBy}" />
                                                             <m:Text text="{taskData>createdAt}" />
                                                             <m:Text text="{taskData>Comment}" />
                                                         </m:cells>
                                                     </m:ColumnListItem>
                                                 </m:items>
                                             </m:Table>
+                                        </blocks>
+                                    </ObjectPageSubSection>
+                                </subSections>
+                            </ObjectPageSection>
+                            <ObjectPageSection id="idOpseComment" titleUppercase="false" title="Comment">
+                                <subSections>
+                                    <ObjectPageSubSection id="idOpseSubComment" title="" titleUppercase="false">
+                                        <blocks>
+                                            <form:SimpleForm
+                                                id="idSfComment"
+                                                editable="false"
+                                                layout="ResponsiveGridLayout"
+                                                labelSpanXL="3"
+                                                labelSpanL="3"
+                                                labelSpanM="3"
+                                                labelSpanS="12"
+                                                adjustLabelSpan="false"
+                                                emptySpanXL="4"
+                                                emptySpanL="4"
+                                                emptySpanM="4"
+                                                emptySpanS="0"
+                                                columnsXL="1"
+                                                columnsL="1"
+                                                columnsM="1"
+                                                singleContainerFullSize="false"
+                                            >
+                                                <form:content>
+                                                    <m:Label text="Comment" />
+                                                    <m:TextArea id="idTaComment" rows="3" placeholder="Enter your comment" value="{taskData>/oComment/sComment}" valueState="{taskData>/oComment/valueState}"
+                                                    valueStateText="{taskData>/oComment/valueStateText}" liveChange="onLiveChange"/>
+                                                </form:content>
+                                            </form:SimpleForm>
                                         </blocks>
                                     </ObjectPageSubSection>
                                 </subSections>
